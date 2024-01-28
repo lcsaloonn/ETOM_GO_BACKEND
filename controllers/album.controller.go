@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"api/ETOM/albums/models"
 	"api/ETOM/albums/services"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,23 +19,59 @@ func New(albumService services.AlbumService) AlbumController{
 }
 
 func (c *AlbumController) CreateAlbum(ctx *gin.Context) {
-	 ctx.JSON(200, "")
+	var album models.Album
+	if err := ctx.ShouldBindJSON(&album); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message":err.Error()})
+	}
+	err:=c.AlbumService.CreateAlbum(&album)
+	if err != nil{
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	 ctx.JSON(http.StatusCreated, gin.H{"message":"success"})
 }	
 
 func (c *AlbumController) GetAlbum(ctx *gin.Context) {
-	ctx.JSON(200, "")
+	albumName:=ctx.Param("name")
+	album, err := c.AlbumService.GetAlbum(&albumName)
+	if err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message":err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, album)
 } 
 
 func (c *AlbumController) GetAll(ctx *gin.Context){
-	ctx.JSON(200, "")
+	albums, err:=c.AlbumService.GetAll()
+	if err != nil{
+		ctx.JSON(http.StatusBadGateway, gin.H{"message":err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, albums)
 } 
 
 func (c *AlbumController) UpdateAlbum(ctx *gin.Context)  {
-	ctx.JSON(200, "")
+	var album models.Album
+	if err:= ctx.ShouldBindJSON(&album); err != nil{
+		ctx.JSON(http.StatusBadRequest , gin.H{"message": err.Error()})
+		return
+	}
+	err:=c.AlbumService.UpdateAlbum(&album)
+	if err != nil{
+		ctx.JSON(http.StatusBadGateway, gin.H{"message":err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message":"success"})
 } 
 
 func (c *AlbumController) DeleteAlbum(ctx *gin.Context)  {
-	ctx.JSON(200, "")
+	userName := ctx.Param("name")
+	err:= c.AlbumService.DeleteAlbum(&userName)
+	if err != nil{
+		ctx.JSON(http.StatusBadGateway, gin.H{"message":err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message":"success"})
 } 
 
 func (c *AlbumController) RegisterAlbumRoutes(rg *gin.RouterGroup){
